@@ -1,0 +1,8 @@
+model_checkpoint_path: "esim-10"
+all_model_checkpoint_paths: "esim-8"
+all_model_checkpoint_paths: "esim-9"
+all_model_checkpoint_paths: "esim-10"
+all_model_checkpoint_timestamps: 1632134006.212222
+all_model_checkpoint_timestamps: 1632134687.3005898
+all_model_checkpoint_timestamps: 1632135370.1171057
+last_preserved_timestamp: 1632117515.166757
