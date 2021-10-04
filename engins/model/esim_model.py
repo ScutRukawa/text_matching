@@ -1,8 +1,7 @@
 from abc import ABC
-from config.config import ModelConfig
-
 import tensorflow as tf
 from tensorflow.keras.layers import LSTM, Bidirectional, Embedding, Attention, Dropout, Dense
+from transformers import TFBertModel, BertTokenizer, BertConfig
 
 from config.config import ModelConfig
 
@@ -18,7 +17,11 @@ class ESIMModel(tf.keras.Model, ABC):
         self.embedding = Embedding(input_dim=cfg.voc_size, output_dim=cfg.embedding_dim,
                                    input_length=cfg.max_seq_length)
         self.dropout = Dropout(rate=0.5)
-        self.dense = Dense(units=2, activation=None)
+        self.dense = Dense(units=2, activation='relu') #### !!!!!
+
+        bert_config = BertConfig.from_json_file('./bert-base-chinese/config.json')
+        self.bert_model = TFBertModel.from_pretrained('bert-base-chinese', config=bert_config)
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese', config=bert_config)
 
     def soft_align_attention(self, s1, s2, mask1, mask2):
         # masked_s1 = tf.ragged.boolean_mask(s1, mask1)  # [1, 3]
@@ -33,19 +36,19 @@ class ESIMModel(tf.keras.Model, ABC):
 
         return s1_align, s2_align
 
-    # def submul(self, s1, s2):
-    #     sub = s1 - s2
-    #     mul = s1 * s2
-    #     return sub, mul
-
     def pooling(self, s):
         avg_pool = tf.reduce_mean(s, axis=1)
         max_pool = tf.reduce_max(s, axis=1)
         return tf.concat([avg_pool, max_pool], axis=1)
 
     def call(self, inputs, training=None, mask=None):
-        embedding_a = self.embedding(inputs[0])
-        embedding_b = self.embedding(inputs[1])
+        if cfg.use_bert:
+            embedding_a = inputs[0]
+            embedding_b = inputs[1]
+
+        else:
+            embedding_a = self.embedding(inputs[0])
+            embedding_b = self.embedding(inputs[1])
 
         encode_a = self.bi_lstm(embedding_a)
         encode_b = self.bi_lstm(embedding_b)
